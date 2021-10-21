@@ -5,6 +5,7 @@ import ru.netology.model.Post;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Repository
 public class PostRepositoryStubImpl implements PostRepository {
@@ -14,35 +15,48 @@ public class PostRepositoryStubImpl implements PostRepository {
     public List<Post> all() {
         if (allPosts.size() == 0) {
             return Collections.emptyList();
+        } else {
+            return allPosts.values().stream().toList()
+                    .stream().filter(post -> !post.isRemoved()).collect(Collectors.toList());
         }
-        return allPosts.values().stream().toList();
+
     }
 
     public Optional<Post> getById(long id) {
         if (allPosts.containsKey(id)) {
-            return Optional.of(allPosts.get(id));
+            if (!allPosts.get(id).isRemoved()) {
+                return Optional.of(allPosts.get(id));
+            } else {
+                return Optional.empty();
+            }
         } else {
             return Optional.empty();
         }
     }
 
-    public Post save(Post post) {
+    public Optional<Post> save(Post post) {
         if (post.getId() == 0) {
             Post savedPost = new Post(++numberOfAllPosts, post.getContent());
             allPosts.put(savedPost.getId(), savedPost);
-            return savedPost;
+            return Optional.of(savedPost);
         } else {
             if (allPosts.containsKey(post.getId())) {
-                allPosts.put(post.getId(), post);
-                return post;
+                if (!allPosts.get(post.getId()).isRemoved()) {
+                    allPosts.put(post.getId(), post);
+                    return Optional.of(post);
+                } else {
+                    return Optional.empty();
+                }
             } else {
-                return new Post(0, "Post can not be saved");
+                return Optional.empty();
             }
         }
     }
 
     public void removeById(long id) {
-        allPosts.entrySet().removeIf(entry -> entry.getKey().equals(id));
+        if (allPosts.containsKey(id)) {
+            allPosts.get(id).setRemoved(true);
+        }
     }
 }
 
