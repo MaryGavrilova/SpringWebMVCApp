@@ -10,7 +10,7 @@ public interface PostRepository {
 
     Optional<Post> getById(long id);
 
-    Post save(Post post);
+    Optional<Post> save(Post post);
 
     void removeById(long id);
 }
